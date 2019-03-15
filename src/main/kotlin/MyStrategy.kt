@@ -19,7 +19,8 @@ class MyStrategy : Strategy {
             action.target_velocity_x = -rules.MAX_ENTITY_SPEED
 
 
-        if( me.z == game.ball.z ){
+
+        if( game.ball.z - me.z in 0.0..5.0){
             action.jump_speed = rules.ROBOT_MAX_JUMP_SPEED
         }
 
