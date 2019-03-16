@@ -3,7 +3,6 @@ import kotlin.math.abs
 
 class MyStrategy : Strategy {
 
-    private val ids = mutableListOf<Int>()
 
     private var zoneD = -25.0
     private var zoneA = 10.0
@@ -13,13 +12,16 @@ class MyStrategy : Strategy {
 
     override fun act(me: Robot, rules: Rules, game: Game, action: Action) {
 
-        if (ids.size == 0) {
-            game.robots.forEach {
-                if (it.is_teammate) {
-                    ids.add(it.id)
+        var isAttacker = false
+
+        game.robots.forEach {
+            if (it.is_teammate && it.id != me.id) {
+                if (it.z < me.z) {
+                    isAttacker = true
                 }
             }
         }
+
 
         if (!me.touch) {
             with(action) {
@@ -34,7 +36,7 @@ class MyStrategy : Strategy {
 
         //0 is forward
         //1 is defender (goalkeeper)
-        if (me.id == ids[0]) {
+        if (isAttacker) {
             actForward(me, rules, game, action)
         } else {
             actDefender(me, rules, game, action)
@@ -60,7 +62,6 @@ class MyStrategy : Strategy {
             var bPos = Vector2D(bX, bZ).getAdded(Vector2D(bVX, bVZ)).getMultiplied(t)
 
             if (bPos.z > me.z
-                    && abs(bPos.x) < (rules.arena.width / 2.0)
                     && abs(bPos.z) < (rules.arena.depth / 2.0)) {
                 var dPos = Vector2D(bPos.x, bPos.z).getSubtracted(Vector2D(me.x, me.z))
                 var nSpeed = dPos.length / t
@@ -80,7 +81,6 @@ class MyStrategy : Strategy {
             actDefender(me, rules, game, action)
 
         }
-
 
     }
 
