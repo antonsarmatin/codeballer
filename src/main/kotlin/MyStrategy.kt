@@ -23,15 +23,15 @@ class MyStrategy : Strategy {
         }
 
 
-        if (!me.touch) {
-            with(action) {
-                target_velocity_x = 0.0
-                target_velocity_y = -rules.MAX_ENTITY_SPEED
-                target_velocity_z = 0.0
-                jump_speed = 0.0
-            }
-            return
-        }
+//        if (!me.touch) {
+//            with(action) {
+//                target_velocity_x = 0.0
+//                target_velocity_y = -rules.MAX_ENTITY_SPEED
+//                target_velocity_z = 0.0
+//                jump_speed = 0.0
+//            }
+//            return
+//        }
 
 
         //0 is forward
@@ -50,8 +50,8 @@ class MyStrategy : Strategy {
 
         val saveDist = 5
 
-        if (game.ball.x - saveDist < me.x) {
-            for (i in 1..21) {
+        if (game.ball.z < me.z) {
+            for (i in 1..51) {
                 var t = i * 0.1
                 var bX = game.ball.x
                 var bZ = game.ball.z
@@ -83,6 +83,10 @@ class MyStrategy : Strategy {
             action.target_velocity_x = targetVelocity.x
             action.target_velocity_z = targetVelocity.z
             action.target_velocity_y = 0.0
+
+            if (me.z > game.ball.z && abs(game.ball.z - me.z) in 0.0..5.0) {
+                action.jump_speed = rules.ROBOT_MAX_JUMP_SPEED
+            }
 
         }
 
@@ -140,7 +144,9 @@ class MyStrategy : Strategy {
             target_velocity_z = targetVelocity.z
             target_velocity_y = 0.0
 
-            jump_speed = if (distToBall < rules.BALL_RADIUS + rules.ROBOT_MAX_RADIUS && me.z < game.ball.z) rules.ROBOT_MAX_JUMP_SPEED else 0.0
+            if (me.z > game.ball.z && abs(game.ball.z - me.z) in 0.0..5.0) {
+                action.jump_speed = rules.ROBOT_MAX_JUMP_SPEED
+            }
 
         }
 
