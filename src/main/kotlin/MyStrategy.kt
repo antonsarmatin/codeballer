@@ -42,47 +42,86 @@ class MyStrategy : Strategy {
             actDefender(me, rules, game, action)
         }
 
-
-//        if (game.ball.z - me.z in 0.0..5.0) {
-//            action.jump_speed = rules.ROBOT_MAX_JUMP_SPEED
-//        }
-
     }
-
 
     private fun actForward(me: Robot, rules: Rules, game: Game, action: Action) {
         val distToBall = calcDistToBall(me, game.ball)
 
-        for (i in 1..101) {
-            var t = i * 0.1
+
+        val saveDist = 5
+
+        if (game.ball.x - saveDist < me.x) {
+            for (i in 1..21) {
+                var t = i * 0.1
+                var bX = game.ball.x
+                var bZ = game.ball.z
+                var bVX = game.ball.velocity_x
+                var bVZ = game.ball.velocity_z
+                var bPos = Vector2D(bX, bZ).getAdded(Vector2D(bVX, bVZ)).getMultiplied(t)
+
+
+                var dPos = Vector2D(bPos.x, bPos.z).getSubtracted(Vector2D(me.x, me.z))
+                var targetVelocity = dPos.normalized.getMultiplied(rules.ROBOT_MAX_GROUND_SPEED)
+
+                action.target_velocity_x = targetVelocity.x
+                action.target_velocity_z = targetVelocity.z
+                action.target_velocity_y = 0.0
+
+            }
+        } else {
+
             var bX = game.ball.x
             var bZ = game.ball.z
             var bVX = game.ball.velocity_x
             var bVZ = game.ball.velocity_z
-            var bPos = Vector2D(bX, bZ).getAdded(Vector2D(bVX, bVZ)).getMultiplied(t)
+            var bPos = Vector2D(bX, bZ)
 
-            if (bPos.z > me.z
-                    && abs(bPos.z) < (rules.arena.depth / 2.0)) {
-                var dPos = Vector2D(bPos.x, bPos.z).getSubtracted(Vector2D(me.x, me.z))
-                var nSpeed = dPos.length / t
 
-                if (0.5 * rules.ROBOT_MAX_GROUND_SPEED < nSpeed && nSpeed < rules.ROBOT_MAX_GROUND_SPEED) {
+            var dPos = Vector2D(bPos.x, bPos.z).getSubtracted(Vector2D(me.x, me.z))
+            var targetVelocity = dPos.normalized.getMultiplied(rules.ROBOT_MAX_GROUND_SPEED)
 
-                    var targetVelocity = dPos.normalized.getMultiplied(nSpeed)
-                    action.target_velocity_x = targetVelocity.x
-                    action.target_velocity_z = targetVelocity.z
-                    action.target_velocity_y = 0.0
-
-                    action.jump_speed = if (distToBall < rules.BALL_RADIUS + rules.ROBOT_MAX_RADIUS && me.z < game.ball.z) rules.ROBOT_MAX_JUMP_SPEED else 0.0
-                    return
-                }
-
-            }
-            actDefender(me, rules, game, action)
+            action.target_velocity_x = targetVelocity.x
+            action.target_velocity_z = targetVelocity.z
+            action.target_velocity_y = 0.0
 
         }
 
     }
+
+
+//    private fun actForward(me: Robot, rules: Rules, game: Game, action: Action) {
+//        val distToBall = calcDistToBall(me, game.ball)
+//
+//        for (i in 1..101) {
+//            var t = i * 0.1
+//            var bX = game.ball.x
+//            var bZ = game.ball.z
+//            var bVX = game.ball.velocity_x
+//            var bVZ = game.ball.velocity_z
+//            var bPos = Vector2D(bX, bZ).getAdded(Vector2D(bVX, bVZ)).getMultiplied(t)
+//
+//            if (bPos.z > me.z
+//                    && abs(bPos.z) < (rules.arena.depth / 2.0)) {
+//                var dPos = Vector2D(bPos.x, bPos.z).getSubtracted(Vector2D(me.x, me.z))
+//                var nSpeed = dPos.length / t
+//
+//                if (0.5 * rules.ROBOT_MAX_GROUND_SPEED < nSpeed && nSpeed < rules.ROBOT_MAX_GROUND_SPEED) {
+//
+//                    var targetVelocity = dPos.normalized.getMultiplied(nSpeed)
+//                    action.target_velocity_x = targetVelocity.x
+//                    action.target_velocity_z = targetVelocity.z
+//                    action.target_velocity_y = 0.0
+//
+//                    action.jump_speed = if (distToBall < rules.BALL_RADIUS + rules.ROBOT_MAX_RADIUS && me.z < game.ball.z) rules.ROBOT_MAX_JUMP_SPEED else 0.0
+//                    return
+//                }
+//
+//            }
+//            actDefender(me, rules, game, action)
+//
+//        }
+//
+//    }
 
     private fun actDefender(me: Robot, rules: Rules, game: Game, action: Action) {
         val distToBall = calcDistToBall(me, game.ball)
