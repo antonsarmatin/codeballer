@@ -51,7 +51,7 @@ class MyStrategy : Strategy {
         val saveDist = 5
 
         if (game.ball.z < me.z) {
-            for (i in 1..51) {
+            for (i in 1..21) {
                 var t = i * 0.1
                 var bX = game.ball.x
                 var bZ = game.ball.z
@@ -74,7 +74,7 @@ class MyStrategy : Strategy {
             var bZ = game.ball.z
             var bVX = game.ball.velocity_x
             var bVZ = game.ball.velocity_z
-            var bPos = Vector2D(bX, bZ)
+            var bPos = Vector2D(bX, bZ).getAdded(Vector2D(bVX, bVZ)).getMultiplied(1.2)
 
 
             var dPos = Vector2D(bPos.x, bPos.z).getSubtracted(Vector2D(me.x, me.z))
@@ -84,9 +84,35 @@ class MyStrategy : Strategy {
             action.target_velocity_z = targetVelocity.z
             action.target_velocity_y = 0.0
 
-            if (me.z > game.ball.z && abs(game.ball.z - me.z) in 0.0..5.0) {
+            if (me.z < game.ball.z && abs(game.ball.z - me.z) in 0.0..5.0) {
                 action.jump_speed = rules.ROBOT_MAX_JUMP_SPEED
             }
+
+            when (true) {
+                //1
+                (bX > 0 && me.x > bX) -> {
+
+                }
+                //2
+                (bX > 0 && me.x < bX) -> {
+                    action.target_velocity_x = rules.ROBOT_MAX_GROUND_SPEED
+                    action.jump_speed = 0.0
+                }
+                //3
+                (bX < 0 && me.x < bX) -> {
+
+                }
+                //4
+                (bX < 0 && me.x > bX) -> {
+                    action.target_velocity_x = -rules.ROBOT_MAX_GROUND_SPEED
+                    action.jump_speed = 0.0
+                }
+                else -> {
+                    //wtf?
+                }
+
+            }
+
 
         }
 
