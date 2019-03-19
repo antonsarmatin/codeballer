@@ -1,3 +1,4 @@
+import geom.Vector2D
 import model.*
 import kotlin.math.abs
 
@@ -38,6 +39,7 @@ class MyStrategy : Strategy {
         //1 is defender (goalkeeper)
         if (isAttacker) {
             actForward(me, rules, game, action)
+//            testAct(me, rules, game, action)
         } else {
             actDefender(me, rules, game, action)
         }
@@ -84,13 +86,20 @@ class MyStrategy : Strategy {
             action.target_velocity_z = targetVelocity.z
             action.target_velocity_y = 0.0
 
-            if (me.z < game.ball.z && abs(game.ball.z - me.z) in 0.0..5.0) {
+            if (me.z < game.ball.z && abs(game.ball.z - me.z) in 0.0..3.0) {
                 action.jump_speed = rules.ROBOT_MAX_JUMP_SPEED
             }
 
             when (true) {
                 //1
                 (bX > 0 && me.x > bX) -> {
+
+                    dPos = Vector2D(bPos.x + rules.BALL_RADIUS, bPos.z).getSubtracted(Vector2D(me.x, me.z))
+                    targetVelocity = dPos.normalized.getMultiplied(rules.ROBOT_MAX_GROUND_SPEED)
+
+                    action.target_velocity_x = targetVelocity.x
+                    action.target_velocity_z = targetVelocity.z
+                    action.target_velocity_y = 0.0
 
                 }
                 //2
@@ -100,6 +109,13 @@ class MyStrategy : Strategy {
                 }
                 //3
                 (bX < 0 && me.x < bX) -> {
+
+                    dPos = Vector2D(bPos.x - rules.BALL_RADIUS, bPos.z).getSubtracted(Vector2D(me.x, me.z))
+                    targetVelocity = dPos.normalized.getMultiplied(rules.ROBOT_MAX_GROUND_SPEED)
+
+                    action.target_velocity_x = targetVelocity.x
+                    action.target_velocity_z = targetVelocity.z
+                    action.target_velocity_y = 0.0
 
                 }
                 //4
@@ -111,13 +127,101 @@ class MyStrategy : Strategy {
                     //wtf?
                 }
 
+
             }
-
-
         }
 
     }
 
+    private fun testAct(me: Robot, rules: Rules, game: Game, action: Action) {
+        var gx1 = rules.arena.goal_width / 2
+        var gz1 = (rules.arena.depth / 2) - (rules.arena.goal_side_radius * 2)
+
+        var gx2 = -rules.arena.goal_width / 2
+        var gz2 = (rules.arena.depth / 2) - (rules.arena.goal_side_radius * 2)
+
+
+        if (game.ball.z < me.z) {
+            for (i in 1..101) {
+                var t = i * 0.1
+                var bX = game.ball.x
+                var bZ = game.ball.z
+                var bVX = game.ball.velocity_x
+                var bVZ = game.ball.velocity_z
+                var bPos = Vector2D(bX, bZ).getAdded(Vector2D(bVX, bVZ)).getMultiplied(t)
+
+
+                var dPos = Vector2D(bPos.x, bPos.z).getSubtracted(Vector2D(me.x, me.z))
+                var targetVelocity = dPos.normalized.getMultiplied(rules.ROBOT_MAX_GROUND_SPEED)
+
+                action.target_velocity_x = targetVelocity.x
+                action.target_velocity_z = targetVelocity.z
+                action.target_velocity_y = 0.0
+
+            }
+        } else {
+
+            var bX = game.ball.x
+            var bZ = game.ball.z
+            var bVX = game.ball.velocity_x
+            var bVZ = game.ball.velocity_z
+            var bPos = Vector2D(bX, bZ).getAdded(Vector2D(bVX, bVZ)).getMultiplied(1.2)
+
+
+            var dPos = Vector2D(bPos.x, bPos.z).getSubtracted(Vector2D(me.x, me.z))
+            var targetVelocity = dPos.normalized.getMultiplied(rules.ROBOT_MAX_GROUND_SPEED)
+
+            action.target_velocity_x = targetVelocity.x
+            action.target_velocity_z = targetVelocity.z
+            action.target_velocity_y = 0.0
+
+            if (me.z < game.ball.z && abs(game.ball.z - me.z) in 0.0..3.0) {
+                action.jump_speed = rules.ROBOT_MAX_JUMP_SPEED
+            }
+
+            when (true) {
+                //1
+                (bX > 0 && me.x > bX) -> {
+
+                    dPos = Vector2D(bPos.x + rules.BALL_RADIUS, bPos.z).getSubtracted(Vector2D(me.x, me.z))
+                    targetVelocity = dPos.normalized.getMultiplied(rules.ROBOT_MAX_GROUND_SPEED)
+
+                    action.target_velocity_x = targetVelocity.x
+                    action.target_velocity_z = targetVelocity.z
+                    action.target_velocity_y = 0.0
+
+                }
+                //2
+                (bX > 0 && me.x < bX) -> {
+                    action.target_velocity_x = rules.ROBOT_MAX_GROUND_SPEED
+                    action.jump_speed = 0.0
+                }
+                //3
+                (bX < 0 && me.x < bX) -> {
+
+                    dPos = Vector2D(bPos.x - rules.BALL_RADIUS, bPos.z).getSubtracted(Vector2D(me.x, me.z))
+                    targetVelocity = dPos.normalized.getMultiplied(rules.ROBOT_MAX_GROUND_SPEED)
+
+                    action.target_velocity_x = targetVelocity.x
+                    action.target_velocity_z = targetVelocity.z
+                    action.target_velocity_y = 0.0
+
+                }
+                //4
+                (bX < 0 && me.x > bX) -> {
+                    action.target_velocity_x = -rules.ROBOT_MAX_GROUND_SPEED
+                    action.jump_speed = 0.0
+                }
+                else -> {
+                    //wtf?
+                }
+
+
+            }
+        }
+
+
+    }
 
 //    private fun actForward(me: Robot, rules: Rules, game: Game, action: Action) {
 //        val distToBall = calcDistToBall(me, game.ball)
@@ -190,12 +294,16 @@ class MyStrategy : Strategy {
     }
 
     private fun calcDistToBall(me: Robot, ball: Ball): Double {
-        return calcDist(me.z, me.x, ball.z, ball.x)
+        return calcDist(me.x, me.z, ball.x, ball.z)
     }
 
-    private fun calcDist(z1: Double, x1: Double,
-                         z2: Double, x2: Double): Double {
+    private fun calcDist(x1: Double, z1: Double,
+                         x2: Double, z2: Double): Double {
         return Math.sqrt((x2 - x1) * (x2 - x1) + (z2 - z1) * (x2 - z1))
+    }
+
+    private fun calcDist(from: Vector2D, to: Vector2D): Double {
+        return calcDist(from.x, from.z, to.x, to.z)
     }
 
     override fun customRendering(): String {
