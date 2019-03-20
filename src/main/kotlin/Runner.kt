@@ -1,7 +1,7 @@
-import model.*
-
+import model.Action
+import model.Game
 import java.io.IOException
-import java.util.HashMap
+import java.util.*
 
 class Runner @Throws(IOException::class)
 private constructor(args: Array<String>) {
@@ -42,7 +42,7 @@ private constructor(args: Array<String>) {
         @Throws(IOException::class)
         @JvmStatic
         fun main(args: Array<String>) {
-            Runner(if (args.size == 3) args else arrayOf("127.0.0.1", "31001", "0000000000000000")).run()
+            Runner(if (args.size == 3) args else arrayOf("127.0.0.1", "31008", "0000000000000000")).run()
         }
     }
 }
