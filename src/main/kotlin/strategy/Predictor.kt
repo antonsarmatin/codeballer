@@ -8,17 +8,16 @@ class Predictor {
 
     private val ticks = 10
     private val microtick = 10
-    private val positions = mutableListOf<Vector>()
 
-    fun predict(ball: Ball): List<Vector> {
-        positions.clear()
+    fun predict(ball: Ball): List<Prediction> {
+        val prediction = mutableListOf<Prediction>()
         for (i in 1..ticks * microtick) {
-            update(ball, (i / microtick).toDouble())
+            prediction.add(update(ball, i.toDouble() / microtick.toDouble()))
         }
-        return positions
+        return prediction
     }
 
-    private fun update(ball: Ball, deltaTime: Double) {
+    private fun update(ball: Ball, deltaTime: Double): Prediction {
 
         var velocity = Vector(ball.velocity_x, ball.velocity_y, ball.velocity_z)
         velocity = clamp(velocity, Constants.MAX_ENTITY_SPEED.toDouble())
@@ -26,17 +25,23 @@ class Predictor {
         val position = Vector(ball.x, ball.y, ball.z).add(velocity.dx * deltaTime, velocity.dy * deltaTime, velocity.dz * deltaTime)
         position.dy -= Constants.GRAVITY * deltaTime * deltaTime / 2
 
-
         velocity.dy -= Constants.GRAVITY * deltaTime
 
-        positions.add(position.copy())
-
+        return Prediction(position, velocity)
     }
 
     private fun clamp(vector: Vector, maxLength: Double): Vector {
         return if (vector.squaredLength > maxLength * maxLength) {
             vector.setLength(maxLength)
         } else vector
+    }
+
+    inner class Prediction(var position: Vector, var velocity: Vector){
+
+
+        fun copy(): Prediction{
+           return Prediction(position.copy(), velocity.copy())
+        }
     }
 
 }
