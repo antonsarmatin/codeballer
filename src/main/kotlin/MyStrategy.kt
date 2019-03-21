@@ -86,6 +86,7 @@ class MyStrategy : Strategy {
 
     private fun actDefender(me: Robot, rules: Rules, game: Game, action: Action) {
 
+        var dangerPred: Predictor.Prediction? = null
 
         var gx1 = rules.arena.goal_width / 2
         var gz1 = -(rules.arena.depth / 2) + +rules.arena.bottom_radius
@@ -97,21 +98,32 @@ class MyStrategy : Strategy {
         var targetVelocity = seek(me, targetPos)
 
 
-        val ballPositions = Predictor().predict(game.ball)
+        val ballPositions = Predictor().predict(game.ball, 20)
         ballPositions.forEach {
-            if (it.dx in gx2 - 2..gx1 + 2 && it.dz < gz1 + Constants.BALL_RADIUS * 3) {
-
-                targetVelocity = run(me, it.copy().add(game.ball.velocity_x, game.ball.velocity_y, game.ball.velocity_z))
-                action.target_velocity_x = targetVelocity.dx
-                action.target_velocity_y = targetVelocity.dy
-                if (targetVelocity.dz > 0) action.target_velocity_z = targetVelocity.dz else action.target_velocity_z = 0.0
-                return
-
+            if (it.position.dx in (gx2 - 2)..(gx1 + 2)
+                    && it.position.dz < gz1 + 10
+                    && it.position.dy in 0.0..rules.arena.goal_height) {
+                println(it.position.toString())
+                dangerPred = it.copy()
+                //посчитать самую короткую из точек всех prediction и идти до нее?
+                return@forEach
             }
 
         }
 
 
+        if (dangerPred != null) {
+//            targetVelocity = run(me, dangerPred!!.position)
+            targetVelocity = run(me, game.ball.getPosition())
+            if (game.ball.getPosition().dy > 0.5 && me.getPosition().getDistance(game.ball.getPosition()) < 3.0)
+                action.jump_speed = Constants.ROBOT_MAX_JUMP_SPEED.toDouble()
+            else
+                action.jump_speed = 0.0
+        }
+
+        if (game.ball.z < me.z && me.z > -(rules.arena.depth / 2.0) + rules.arena.bottom_radius) {
+            targetVelocity.dz = -Constants.ROBOT_MAX_GROUND_SPEED.toDouble()
+        }
 
         action.target_velocity_x = targetVelocity.dx
         action.target_velocity_y = targetVelocity.dy
