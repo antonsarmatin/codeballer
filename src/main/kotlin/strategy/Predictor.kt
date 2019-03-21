@@ -6,10 +6,9 @@ import model.Ball
 
 class Predictor {
 
-    private val ticks = 10
     private val microtick = 10
 
-    fun predict(ball: Ball): List<Prediction> {
+    fun predict(ball: Ball, ticks: Int): List<Prediction> {
         val prediction = mutableListOf<Prediction>()
         for (i in 1..ticks * microtick) {
             prediction.add(update(ball, i.toDouble() / microtick.toDouble()))
