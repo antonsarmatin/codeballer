@@ -16,6 +16,9 @@ class MyStrategy : Strategy {
     private val znKey = 1
     private val zaKey = 2
 
+    private val goalReduce = 5
+
+
     private var goalkeeperState = 0
 
     override fun act(me: Robot, rules: Rules, game: Game, action: Action) {
@@ -86,6 +89,7 @@ class MyStrategy : Strategy {
 
     private fun actDefender(me: Robot, rules: Rules, game: Game, action: Action) {
 
+
         var dangerPred: Predictor.Prediction? = null
 
         var gx1 = rules.arena.goal_width / 2
@@ -98,20 +102,30 @@ class MyStrategy : Strategy {
         var targetVelocity = seek(me, targetPos)
 
 
+        //сдвигаем вратаря в воротах в сторону мяча
+        if (game.ball.z < -5) {
+
+            targetPos.dx = game.ball.x * ((rules.arena.goal_width - goalReduce) / rules.arena.width)
+            targetVelocity = run(me, targetPos)
+        }
+
+
+        //Предсказываем положение мяча на следующие n тиков
         val ballPositions = Predictor().predict(game.ball, 20)
+        //Проверяем, есть ли в предсказанных тиках такие положения мяча,
+        // которые могут соответствовать положению в воротах
         ballPositions.forEach {
             if (it.position.dx in (gx2 - 2)..(gx1 + 2)
                     && it.position.dz < gz1 + 10
                     && it.position.dy in 0.0..rules.arena.goal_height) {
                 println(it.position.toString())
                 dangerPred = it.copy()
-                //посчитать самую короткую из точек всех prediction и идти до нее?
                 return@forEach
             }
 
         }
 
-
+        //Если таке положения есть, то двигаемся в сторону мяча todo нужно посчитать куда оптимальнее двигаться
         if (dangerPred != null) {
 //            targetVelocity = run(me, dangerPred!!.position)
             targetVelocity = run(me, game.ball.getPosition())
@@ -121,8 +135,11 @@ class MyStrategy : Strategy {
                 action.jump_speed = 0.0
         }
 
+                //Если мяч за нашей спиной, то стараемся вернуться назад
         if (game.ball.z < me.z && me.z > -(rules.arena.depth / 2.0) + rules.arena.bottom_radius) {
-            targetVelocity.dz = -Constants.ROBOT_MAX_GROUND_SPEED.toDouble()
+//            targetVelocity.dz = -Constants.ROBOT_MAX_GROUND_SPEED.toDouble()
+            targetPos = Vector(0.0, 0.0, -(rules.arena.depth / 2.0) + rules.arena.bottom_radius)
+            targetVelocity = run(me, targetPos)
         }
 
         action.target_velocity_x = targetVelocity.dx
