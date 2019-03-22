@@ -2,6 +2,7 @@ package action
 
 import Constants
 import geom.Vector
+import getPosition
 import model.Robot
 
 class Move {
@@ -28,7 +29,7 @@ class Move {
         private val slowingRadius = 5.0
 
         fun run(robot: Robot, target: Vector): Vector {
-            val desiredVelocity = target.copy().subtract(robot.x, robot.y, robot.z)
+            val desiredVelocity = target.copy().subtract(robot.getPosition())
             val length = desiredVelocity.length
             val squaredLength = desiredVelocity.squaredLength
             if (squaredLength < slowingRadius) {
@@ -40,10 +41,11 @@ class Move {
             return desiredVelocity
         }
 
+
         fun seek(robot: Robot, target: Vector): Vector {
             val groundTarget = target.copy()
             groundTarget.dy = 1.0
-            val desiredVelocity = groundTarget.subtract(robot.x, robot.y, robot.z)
+            val desiredVelocity = groundTarget.subtract(robot.getPosition())
             desiredVelocity.setLength(Constants.ROBOT_MAX_GROUND_SPEED - Constants.EPS)
             return desiredVelocity
         }

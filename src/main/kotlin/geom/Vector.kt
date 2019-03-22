@@ -25,7 +25,7 @@ class Vector(var dx: Double, var dy: Double, var dz: Double) {
     }
 
     fun setLength(length: Double): Vector {
-        val c = length / length
+        val c = this.length / length
         dx = dx / c
         dy = dy / c
         dz = dz / c
