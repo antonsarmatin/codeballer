@@ -47,40 +47,48 @@ class MyStrategy : Strategy {
         //0 is forward
         //1 is defender (goalkeeper)
         if (isAttacker) {
-            actForward(me, rules, game, action)
-//            testAct(me, rules, game, action)
+//            actForward(me, rules, game, action)
+            testAct(me, rules, game, action)
         } else {
-            actDefender(me, rules, game, action)
+            actGoalkeeper(me, rules, game, action)
         }
 
     }
 
     private fun actForward(me: Robot, rules: Rules, game: Game, action: Action) {
 
-        var targetPos = Vector(game.ball.x, game.ball.y, game.ball.z)
+        var gx1 = rules.arena.goal_width / 2
+        var gz1 = (rules.arena.depth / 2) - (rules.arena.goal_side_radius * 2)
 
+        var gx2 = -rules.arena.goal_width / 2
+        var gz2 = (rules.arena.depth / 2) - (rules.arena.goal_side_radius * 2)
+
+        var ball = game.ball
+        var targetPos = Vector(game.ball.x, game.ball.y, game.ball.z)
         var targetVelocity = run(me, targetPos)
 
+        //Предсказываем положение мяча на следующие n тиков
+        val ballPositions = Predictor().predict(game.ball, 20)
 
-
-        if (game.ball.z < -22) {
-
-            targetPos = if (game.ball.x < 0) {
-                Vector(-10.0, 0.0, -25.0)
-            } else {
-                Vector(10.0, 0.0, -25.0)
+        when {
+            ball.z > 0 -> {
+                targetPos = ball.getPosition()
+                targetVelocity = run(me, targetPos)
             }
-            targetVelocity = run(me, targetPos)
-
+            ball.z < -25 -> {
+                actGoalkeeper(me, rules, game, action)
+            }
+            else -> {
+                targetPos = ballPositions.last().position
+                targetVelocity = run(me, targetPos)
+            }
         }
-
 
         if (me.getPosition().getDistance(game.ball.getPosition()) < rules.BALL_RADIUS + rules.ROBOT_MAX_RADIUS
                 && me.z < game.ball.z)
             action.jump_speed = Constants.ROBOT_MAX_JUMP_SPEED.toDouble()
         else
             action.jump_speed = 0.0
-
 
         action.target_velocity_x = targetVelocity.dx
         action.target_velocity_y = targetVelocity.dy
@@ -95,10 +103,41 @@ class MyStrategy : Strategy {
         var gx2 = -rules.arena.goal_width / 2
         var gz2 = (rules.arena.depth / 2) - (rules.arena.goal_side_radius * 2)
 
+        var ball = game.ball
+        var targetPos = Vector(game.ball.x, game.ball.y, game.ball.z)
+        var targetVelocity = run(me, targetPos)
+
+        //Предсказываем положение мяча на следующие n тиков
+        val ballPositions = Predictor().predict(game.ball, 20)
+
+        if (ball.z > 0) {
+
+        } else {
+            if (ball.z < -25) {
+                actDefender(me, rules, game, action)
+            } else {
+                val t = ballPositions.size / 2
+                targetPos = ballPositions[t].position
+                targetVelocity = run(me, targetPos)
+            }
+        }
+
+
+
+
+        if (me.getPosition().getDistance(game.ball.getPosition()) < rules.BALL_RADIUS + rules.ROBOT_MAX_RADIUS
+                && me.z < game.ball.z)
+            action.jump_speed = Constants.ROBOT_MAX_JUMP_SPEED.toDouble()
+        else
+            action.jump_speed = 0.0
+
+        action.target_velocity_x = targetVelocity.dx
+        action.target_velocity_y = targetVelocity.dy
+        action.target_velocity_z = targetVelocity.dz
     }
 
 
-    private fun actDefender(me: Robot, rules: Rules, game: Game, action: Action) {
+    private fun actGoalkeeper(me: Robot, rules: Rules, game: Game, action: Action) {
 
 
         var dangerPred: Predictor.Prediction? = null
@@ -109,7 +148,8 @@ class MyStrategy : Strategy {
         var gx2 = -rules.arena.goal_width / 2
         var gz2 = -(rules.arena.depth / 2) + rules.arena.bottom_radius
 
-        var targetPos = Vector(0.0, 0.0, -(rules.arena.depth / 2.0) + rules.arena.bottom_radius/2.0)
+        val defPos = Vector(0.0, 0.0, -(rules.arena.depth / 2.0) + rules.arena.bottom_radius / 2.0)
+        var targetPos = defPos.copy()
         var targetVelocity = run(me, targetPos)
 
 
@@ -149,9 +189,9 @@ class MyStrategy : Strategy {
         //Если мяч за нашей спиной, то стараемся вернуться назад
         if (game.ball.z < me.z && me.z > -(rules.arena.depth / 2.0) + rules.arena.bottom_radius) {
 //            targetVelocity.dz = -Constants.ROBOT_MAX_GROUND_SPEED.toDouble()
-            targetPos = Vector(0.0, 0.0, -(rules.arena.depth / 2.0) + rules.arena.bottom_radius)
-            targetVelocity = run(me, targetPos)
+            targetVelocity = run(me, defPos)
         }
+
 
         action.target_velocity_x = targetVelocity.dx
         action.target_velocity_y = targetVelocity.dy
@@ -159,6 +199,70 @@ class MyStrategy : Strategy {
 
     }
 
+    private fun actDefender(me: Robot, rules: Rules, game: Game, action: Action) {
+        var dangerPred: Predictor.Prediction? = null
+
+        var gx1 = rules.arena.goal_width / 2
+        var gz1 = -(rules.arena.depth / 2) + +rules.arena.bottom_radius
+
+        var gx2 = -rules.arena.goal_width / 2
+        var gz2 = -(rules.arena.depth / 2) + rules.arena.bottom_radius
+
+        val defPos = Vector(0.0, 0.0, -(rules.arena.depth / 2.0) + 5 * Constants.BALL_RADIUS)
+        var targetPos = defPos.copy()
+        var targetVelocity = run(me, targetPos)
+
+
+        //сдвигаем вратаря в воротах в сторону мяча
+        if (game.ball.z < -27) {
+
+            targetPos.dx = game.ball.x * ((rules.arena.width - 12) / rules.arena.width)
+            targetVelocity = run(me, targetPos)
+        }
+
+
+        //Предсказываем положение мяча на следующие n тиков
+        val ballPositions = Predictor().predict(game.ball, 20)
+        //Проверяем, есть ли в предсказанных тиках такие положения мяча,
+        // которые могут соответствовать положению в воротах
+        ballPositions.forEach {
+            if (it.position.dx in (gx2 - 2)..(gx1 + 2)
+                    && it.position.dz < gz1 + 10
+                    && it.position.dy in 0.0..rules.arena.goal_height) {
+                println(it.position.toString())
+                dangerPred = it.copy()
+                return@forEach
+            }
+
+        }
+
+        //Если таке положения есть, то двигаемся в сторону мяча todo нужно посчитать куда оптимальнее двигаться
+        if (dangerPred != null) {
+            targetVelocity = run(me, dangerPred!!.position)
+            if (me.getPosition().getDistance(game.ball.getPosition()) < rules.BALL_RADIUS + rules.ROBOT_MAX_RADIUS
+                    && me.z < game.ball.z)
+                action.jump_speed = Constants.ROBOT_MAX_JUMP_SPEED.toDouble()
+            else
+                action.jump_speed = 0.0
+        }
+
+        //Если мяч за нашей спиной, то стараемся вернуться назад
+        if (game.ball.z < me.z && me.z > -(rules.arena.depth / 2.0) + rules.arena.bottom_radius) {
+//            targetVelocity.dz = -Constants.ROBOT_MAX_GROUND_SPEED.toDouble()
+            targetVelocity = run(me, defPos)
+        }
+
+
+        if (game.ball.z < (rules.arena.depth / 2) + 10) {
+            targetVelocity = Vector(0.0, 0.0, 0.0)
+            action.jump_speed = 0.0
+        }
+
+        action.target_velocity_x = targetVelocity.dx
+        action.target_velocity_y = targetVelocity.dy
+        action.target_velocity_z = targetVelocity.dz
+
+    }
 
     //текущая зона для позиции
     private fun zone(z: Double): Int {
