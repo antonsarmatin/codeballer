@@ -1,5 +1,4 @@
 import action.Move.Companion.run
-import action.Move.Companion.seek
 import geom.Vector
 import model.Action
 import model.Game
@@ -99,7 +98,7 @@ class MyStrategy : Strategy {
         var gz2 = -(rules.arena.depth / 2) + rules.arena.bottom_radius
 
         var targetPos = Vector(0.0, 0.0, -(rules.arena.depth / 2.0) + rules.arena.bottom_radius)
-        var targetVelocity = seek(me, targetPos)
+        var targetVelocity = run(me, targetPos)
 
 
         //сдвигаем вратаря в воротах в сторону мяча
@@ -127,15 +126,15 @@ class MyStrategy : Strategy {
 
         //Если таке положения есть, то двигаемся в сторону мяча todo нужно посчитать куда оптимальнее двигаться
         if (dangerPred != null) {
-//            targetVelocity = run(me, dangerPred!!.position)
             targetVelocity = run(me, game.ball.getPosition())
-            if (game.ball.getPosition().dy > 0.5 && me.getPosition().getDistance(game.ball.getPosition()) < 3.0)
+            if (me.getPosition().getDistance(game.ball.getPosition()) < rules.BALL_RADIUS + rules.ROBOT_MAX_RADIUS
+                    && me.z < game.ball.z)
                 action.jump_speed = Constants.ROBOT_MAX_JUMP_SPEED.toDouble()
             else
                 action.jump_speed = 0.0
         }
 
-                //Если мяч за нашей спиной, то стараемся вернуться назад
+        //Если мяч за нашей спиной, то стараемся вернуться назад
         if (game.ball.z < me.z && me.z > -(rules.arena.depth / 2.0) + rules.arena.bottom_radius) {
 //            targetVelocity.dz = -Constants.ROBOT_MAX_GROUND_SPEED.toDouble()
             targetPos = Vector(0.0, 0.0, -(rules.arena.depth / 2.0) + rules.arena.bottom_radius)
