@@ -15,7 +15,7 @@ class MyStrategy : Strategy {
     private val znKey = 1
     private val zaKey = 2
 
-    private val goalReduce = 5
+    private val goalReduce = 1
 
 
     private var goalkeeperState = 0
@@ -47,7 +47,7 @@ class MyStrategy : Strategy {
         //0 is forward
         //1 is defender (goalkeeper)
         if (isAttacker) {
-//            actForward(me, rules, game, action)
+            actForward(me, rules, game, action)
 //            testAct(me, rules, game, action)
         } else {
             actDefender(me, rules, game, action)
@@ -61,18 +61,30 @@ class MyStrategy : Strategy {
 
         var targetVelocity = run(me, targetPos)
 
+
+
+        if (game.ball.z < -22) {
+
+            targetPos = if (game.ball.x < 0) {
+                Vector(-10.0, 0.0, -25.0)
+            } else {
+                Vector(10.0, 0.0, -25.0)
+            }
+            targetVelocity = run(me, targetPos)
+
+        }
+
+
+        if (me.getPosition().getDistance(game.ball.getPosition()) < rules.BALL_RADIUS + rules.ROBOT_MAX_RADIUS
+                && me.z < game.ball.z)
+            action.jump_speed = Constants.ROBOT_MAX_JUMP_SPEED.toDouble()
+        else
+            action.jump_speed = 0.0
+
+
         action.target_velocity_x = targetVelocity.dx
         action.target_velocity_y = targetVelocity.dy
         action.target_velocity_z = targetVelocity.dz
-
-        if (game.ball.z < -30) {
-
-            targetVelocity = run(me, targetPos)
-
-            action.target_velocity_x = targetVelocity.dx
-            action.target_velocity_y = targetVelocity.dy
-            action.target_velocity_z = 0.0
-        }
     }
 
 
@@ -97,7 +109,7 @@ class MyStrategy : Strategy {
         var gx2 = -rules.arena.goal_width / 2
         var gz2 = -(rules.arena.depth / 2) + rules.arena.bottom_radius
 
-        var targetPos = Vector(0.0, 0.0, -(rules.arena.depth / 2.0) + rules.arena.bottom_radius)
+        var targetPos = Vector(0.0, 0.0, -(rules.arena.depth / 2.0) + rules.arena.bottom_radius/2.0)
         var targetVelocity = run(me, targetPos)
 
 
