@@ -22,7 +22,14 @@ class Predictor {
         velocity = clamp(velocity, Constants.MAX_ENTITY_SPEED.toDouble())
 
         val position = Vector(ball.x, ball.y, ball.z).add(velocity.dx * deltaTime, velocity.dy * deltaTime, velocity.dz * deltaTime)
-        position.dy -= Constants.GRAVITY * deltaTime * deltaTime / 2
+//todo  нужно разобраться с отскоком мяча, чтобы корректно считать его y положение
+//        position.dy -= Constants.GRAVITY * deltaTime * deltaTime / 2
+//        position.dy = ball.y
+        if(position.dy - Constants.GRAVITY * deltaTime * deltaTime / 2 > 0){
+            position.dy -= Constants.GRAVITY * deltaTime * deltaTime / 2
+        }else{
+            position.dy = 0.5
+        }
 
         velocity.dy -= Constants.GRAVITY * deltaTime
 
