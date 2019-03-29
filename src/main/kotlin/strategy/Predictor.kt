@@ -3,8 +3,9 @@ package strategy
 import Constants
 import geom.Vector
 import model.Ball
+import model.Rules
 
-class Predictor {
+class Predictor(var rules: Rules) {
 
     private val microtick = 10
 
@@ -25,11 +26,14 @@ class Predictor {
 //todo  нужно разобраться с отскоком мяча, чтобы корректно считать его y положение
 //        position.dy -= Constants.GRAVITY * deltaTime * deltaTime / 2
 //        position.dy = ball.y
-        if(position.dy - Constants.GRAVITY * deltaTime * deltaTime / 2 > 0){
+        if (position.dy - Constants.GRAVITY * deltaTime * deltaTime / 2 > 0) {
             position.dy -= Constants.GRAVITY * deltaTime * deltaTime / 2
-        }else{
+        } else {
             position.dy = 0.5
         }
+
+        if (position.dz < -(rules.arena.depth / 2) - rules.arena.goal_depth)
+            position.dz = -(rules.arena.depth / 2) - rules.arena.goal_depth
 
         velocity.dy -= Constants.GRAVITY * deltaTime
 
@@ -42,11 +46,11 @@ class Predictor {
         } else vector
     }
 
-    inner class Prediction(var position: Vector, var velocity: Vector){
+    inner class Prediction(var position: Vector, var velocity: Vector) {
 
 
-        fun copy(): Prediction{
-           return Prediction(position.copy(), velocity.copy())
+        fun copy(): Prediction {
+            return Prediction(position.copy(), velocity.copy())
         }
     }
 
